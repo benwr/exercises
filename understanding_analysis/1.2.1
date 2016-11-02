@@ -1,0 +1,46 @@
+a. Prove that sqrt(3) is irrational. Does a similar argument hold for sqrt(6)?
+b. Where does the proof of Theorem 1.1.1 break down if we try to use it to
+prove sqrt(4) is irrational?
+
+a.
+Assume for contradiction that sqrt(3) is rational.
+
+That is, it can be expressed as the irreducible ratio of two nonzero integers
+p and q:
+
+sqrt(3) = p / q
+3 = (p / q)^2
+3 = (p^2) / (q^2)
+(1) 3 * q^2 = p^2
+
+Therefore 3 is a factor of p^2
+
+By the fundamental theorem of arithmetic, p can be written as a finite product
+of a unique increasing sequence of prime numbers:
+
+p = a * b * ...
+p^2 = a * a * b * b * ...
+
+Since 3 is a factor of p^2, and it has no prime factors other than itself, it must appear
+in this product. But each prime factor must appear at least twice in this list. Therefore 3
+occurs at least twice. Rearranging, we get that
+
+p^2 = 3 * 3 * a * a * b * b * ...
+
+p = 3 * a * b * ...
+
+Therefore there is a number s = a * b * ... such that p = 3 * s, and p^2 = 3 * 3 * s^2
+
+From (1) we have that 3 * q^2 = p^2 = 3 * 3 * s^2
+
+therefore q^2 = 3 * s^2, so q^2 is also divisible by 3. But we specified
+that p and q were irreducible, and therefore they cannot both be divisible
+by 3. Having reached a contradiction, we reject the assumption that sqrt(3) is rational.
+
+A similar argument would hold for sqrt(6), but would be more steps since 6 itself
+is not prime and would need to be decomposed into 3 and 2.
+
+
+b.
+4 has a prime factorization of 2 * 2. p^2 can therefore be divisible by 4 without p being divisible
+by 4.
