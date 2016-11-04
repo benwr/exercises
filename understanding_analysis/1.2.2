@@ -1,0 +1,20 @@
+Prove that There is no rational number r such that 2^r = 3
+
+Assume, for contradiction, that there is a rational number r = p / q
+such that 2^r = 3, and p and q are natural numbers sharing no common
+factors. Then,
+
+      2^(p/q) = 3
+      (2^(p/q))^q = 3^q
+ (1)  2^p = 3^q
+
+2^p and 3^q are both natural numbers that can be expressed as
+the finite products 2*2*2...*2 and 3*3*3...*3 respetively
+(since p and q are also natural numbers). Both 2^p and 3^q can
+be expressed uniquely as a product of prime numbers, and since 2 and
+3 are both primes, the given factorizations are the _only_
+factorizations. Since these factorizations are not equal, 2^p and
+3^q are not equal. But this contradicts (1).
+
+Having reached a contradiction, we are forced to accept that our
+assumption is false.
