@@ -57,6 +57,75 @@ impl Encoder<bool> for RN {
     }
 }
 
+pub struct Hamming74 {
+}
+
+impl Hamming74 {
+    pub fn make_hamming74() -> Hamming74 {
+        Hamming74 {}
+    }
+}
+
+impl Encoder<bool> for Hamming74 {
+    /* This is not quite the Hamming(7,4) code as it was presented
+       to me in MacKay. It has identical properties and is primarily
+       a reordering that makes the code easier.
+     */
+    fn encode(&self, message: &[bool]) -> Vec<bool> {
+        let mut result = vec![];
+        for i in 0..message.len() / 4 {
+            for j in 0..4 {
+                if i * 4 + j < message.len() {
+                    result.push(message[i * 4 + j]);
+                } else {
+                    result.push(false);
+                }
+            }
+            for j in 0..3 {
+                let mut acc = false;
+                for k in 0..4 {
+                    if k != j {
+                        acc ^= message[i * 4 + k];
+                    }
+                }
+                result.push(acc);
+            }
+        }
+        result
+    }
+
+    fn decode(&self, message: &[bool]) -> Vec<bool> {
+        let mut result = vec![];
+        for i in 0..(message.len() / 7) {
+            for j in 0..4 {
+                result.push(message[i * 7 + j]);
+            }
+            let mut syndrome: u8 = 0;
+            for j in 0..3 {
+                let mut syndrome_i = message[i * 7 + 4 + j];
+                for k in 0..4 {
+                    if k != j {
+                        syndrome_i ^= message[i * 7 + k];
+                    }
+                }
+                syndrome |= (syndrome_i as u8) << j;
+            }
+            let flipped_bit : usize = match syndrome {
+                0b011 => 0b10,
+                0b101 => 0b01,
+                0b110 => 0b00,
+                0b111 => 0b11,
+                _ => 0b11111111,
+            };
+            if flipped_bit != 0b11111111 {
+                result[i * 7 + flipped_bit] = !result[i * 7 + flipped_bit];
+            }
+        }
+        result
+    }
+}
+
+
 }
 
 #[cfg(test)]
@@ -81,5 +150,34 @@ mod tests {
         let result3 = r3.encode(&cleartext3);
         assert_eq!(result3, [true, true, true, false, false, false, true, true, true]);
         assert_eq!(&r3.decode(&result3), &cleartext3);
+        let result4 = r3.decode(&cleartext3);
+        assert_eq!(result4, [true]);
+    }
+
+    #[test]
+    fn h74() {
+        let h = encodings::Hamming74::make_hamming74();
+
+        let cleartext1 = vec![];
+        let result1 = h.encode(&cleartext1);
+        assert_eq!(result1, []);
+        assert_eq!(&h.decode(&result1), &cleartext1);
+
+        let cleartext2 = vec![true, true, true, true];
+        let result2 = h.encode(&cleartext2);
+        assert_eq!(result2, [true, true, true, true, true, true, true]);
+        assert_eq!(&h.decode(&result2), &cleartext2);
+
+        let cleartext3 = vec![true, false, true, false, true, false, true,
+         false];
+        let result3 = h.encode(&cleartext3);
+        assert_eq!(result3, [true, false, true, false, true, false, true, true,
+         false, true, false, true, false, true]);
+        assert_eq!(&h.decode(&result3), &cleartext3);
+
+        let flipped = vec![true, true, true, true, true, false, false];
+        assert_eq!(h.decode(&flipped), [false, true, true, true]);
+        let flipped2 = vec![true, true, true, true, false, false, false];
+        assert_eq!(h.decode(&flipped2), [true, true, true, false]);
     }
 }
