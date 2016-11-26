@@ -1,0 +1,6 @@
+[package]
+name = "mackay"
+version = "0.1.0"
+authors = ["Ben Weinstein-Raun <ben@getcruise.com>"]
+
+[dependencies]
