@@ -1,9 +1,51 @@
 pub mod encodings {
-pub trait Encoder<Symbol> {
-    fn encode(&self, message: &[Symbol]) -> Vec<Symbol>;
-    fn decode(&self, message: &[Symbol]) -> Vec<Symbol>;
+use std::clone::Clone;
+
+pub trait Encoder<Input: Clone, Output: Clone> {
+    fn encode(&self, message: &[Input]) -> Vec<Output>;
+    fn decode(&self, message: &[Output]) -> Vec<Input>;
 }
 
+pub struct Composition<Symbol> {
+    components: Vec<Box<Encoder<Symbol, Symbol>>>,
+}
+
+
+impl<Symbol: Clone> Composition<Symbol> {
+    pub fn make_composition() -> Composition<Symbol> {
+        Composition {components: vec![]}
+    }
+
+    pub fn add_encoder(& mut self, new: Box<Encoder<Symbol, Symbol>>) {
+        self.components.push(new);
+    }
+}
+
+impl<Symbol: Clone> Encoder<Symbol, Symbol> for Composition<Symbol> {
+    fn encode(&self, message: &[Symbol]) -> Vec<Symbol> {
+        let mut result = vec![];
+        result.extend_from_slice(message);
+        let mut intermediate;
+        for e in &self.components {
+            intermediate = (*e).encode(&result);
+            result = intermediate;
+        }
+        result
+    }
+
+    fn decode(&self, message: &[Symbol]) -> Vec<Symbol> {
+        let mut result = vec![];
+        result.extend_from_slice(message);
+        let mut intermediate;
+        for e in (&self.components).iter().rev() {
+            intermediate = (*e).encode(&result);
+            result = intermediate;
+        }
+        result
+    }
+}
+
+#[derive(Debug, Clone)]
 pub struct RN {
     n: u8,
 }
@@ -18,7 +60,7 @@ impl RN {
     }
 }
 
-impl Encoder<bool> for RN {
+impl Encoder<bool, bool> for RN {
     fn encode(&self, message: &[bool]) -> Vec<bool> {
         let mut result = vec![];
         result.reserve(self.n as usize * message.len());
@@ -57,6 +99,7 @@ impl Encoder<bool> for RN {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct Hamming74 {
 }
 
@@ -66,7 +109,7 @@ impl Hamming74 {
     }
 }
 
-impl Encoder<bool> for Hamming74 {
+impl Encoder<bool, bool> for Hamming74 {
     /* This is not quite the Hamming(7,4) code as it was presented
        to me in MacKay. It has identical properties and is primarily
        a reordering that makes the code easier.
@@ -179,5 +222,20 @@ mod tests {
         assert_eq!(h.decode(&flipped), [false, true, true, true]);
         let flipped2 = vec![true, true, true, true, false, false, false];
         assert_eq!(h.decode(&flipped2), [true, true, true, false]);
+    }
+
+    #[test]
+    fn composition() {
+        let h = Box::new(encodings::Hamming74::make_hamming74());
+        let r = Box::new(encodings::RN::make_rn(3).unwrap());
+        let mut c = encodings::Composition::make_composition();
+        c.add_encoder(r);
+        c.add_encoder(h);
+
+        let cleartext1 = vec![];
+        let result1 = c.encode(&cleartext1);
+        assert_eq!(result1, []);
+
+        // TODO Actually test this composition
     }
 }
